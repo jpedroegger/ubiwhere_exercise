@@ -1,5 +1,5 @@
 from django.urls import path
-from api.views import RoadSegmentListView, RoadSegmentDetailView
+from traffic_monitor.api.views import RoadSegmentListView, RoadSegmentDetailView
 
 
 urlpatterns = [
