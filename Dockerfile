@@ -1,7 +1,15 @@
 FROM python:3.13-slim
 
-RUN mkdir /app
+# Install system dependencies required by GeoDjango
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    binutils \
+    libproj-dev \
+    gdal-bin \
+    libgdal-dev \
+    libgeos-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /app
 WORKDIR /app
 
 COPY requirements.txt  /app/
