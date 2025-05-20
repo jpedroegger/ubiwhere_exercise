@@ -1,3 +1,15 @@
 from django.shortcuts import render
+from rest_framework import generics
 
-# Create your views here.
+
+class RoadSegmentListView(generics.ListCreateAPIView):
+    """
+    API view to retrieve and create road segments.
+    """
+    pass 
+
+class RoadSegmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API view to retrieve, update, or delete a roada segment.
+    """
+    pass 
