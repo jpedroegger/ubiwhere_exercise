@@ -9,6 +9,9 @@ class RoadSegment(models.Model):
     coordinate = models.LineStringField()
     road_length = models.DecimalField(max_digits=10, decimal_places=2)
 
+    def __str__(self):
+        return f"RoadSegment-> id:{self.id} length:{self.road_length}"
+
 class SpeedReading(models.Model):
     """
     Model representing a speed reading for a roada segment.
@@ -19,3 +22,6 @@ class SpeedReading(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    def __str__(self):
+        return f"SpeedReading-> RoadSegment:{self.road_segment.id} at speed:{self.speed})"
