@@ -1,6 +1,6 @@
-from django.db.models import Prefetch
+from django.db.models import OuterRef, Subquery
 from rest_framework import generics
-from traffic_monitor.models import RoadSegment, SpeedReading
+from traffic_monitor.models import RoadSegment, SpeedReading, TrafficClassification
 from traffic_monitor.api.serializers import RoadSegmentSerializer, SpeedReadingSerializer
 from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly
 
@@ -9,31 +9,30 @@ class RoadSegmentListView(generics.ListCreateAPIView):
     """
     API view to retrieve and create road segments.
     """
-    # queryset = RoadSegment.objects.all()
+    queryset = RoadSegment.objects.none()
     serializer_class = RoadSegmentSerializer
     permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
 
     def get_queryset(self):
         classification_filter = self.request.query_params.get('classification', None)
-        latest_readings = SpeedReading.objects.order_by('-created_at')
+        
+        if not classification_filter:
+            return RoadSegment.objects.all()
 
-        segments = RoadSegment.objects.prefetch_related(
-            Prefetch('speed_readings', queryset=latest_readings, to_attr='all_readings')
+        try:
+            classification = TrafficClassification.objects.get(name=classification_filter.upper())
+        except TrafficClassification.DoesNotExist:
+            return RoadSegment.objects.none()
+        latest_readings = SpeedReading.objects.filter(
+            road_segment=OuterRef('pk')
+        ).order_by('-created_at')
+        
+        return RoadSegment.objects.annotate(
+            latest_speed=Subquery(latest_readings.values('speed')[:1])
+        ).filter(
+            latest_speed__gte=classification.min_speed or 0,
+            latest_speed__lte=classification.max_speed or float('inf')
         )
-
-        if classification_filter:
-            classification_filter = classification_filter.upper()
-            filtered = []
-
-            for segment in segments:
-                if segment.all_readings:
-                    latest = segment.all_readings[0]
-                    if latest.classification and latest.classification.name == classification_filter:
-                        filtered.append(segment)
-
-            return filtered
-
-        return segments
 
 
 class RoadSegmentDetailView(generics.RetrieveUpdateDestroyAPIView):

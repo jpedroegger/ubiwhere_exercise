@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.gis.db import models
+from django.core.exceptions import ValidationError
+from django.contrib.gis.geos import LineString
 
 
 class TrafficClassification(models.Model):
@@ -20,12 +22,36 @@ class TrafficClassification(models.Model):
     def __str__(self):
         return f"{self.get_name_display()} ({self.min_speed or 'Null'} a {self.max_speed or 'Null'})"
 
+
 class RoadSegment(models.Model):
     """
     Model representing a road segment.
     """
     coordinate = models.LineStringField()
     road_length = models.DecimalField(max_digits=10, decimal_places=2)
+
+    @classmethod
+    def has_duplicate_linestring(cls, linestring):
+        """
+        Check if a linestring already exists in the database.
+        """
+        new_coordinate = list(linestring.coords)
+
+        return cls.objects.filter(
+            models.Q(coordinate__exact=linestring) |
+            models.Q(coordinate__exact=LineString(new_coordinate[::-1]))
+        ).exists()
+    
+    def clean(self):
+        """
+        Method to call custom validation before saving.
+        """
+        if self.coordinate and self.has_duplicate_linestring(self.coordinate):
+            raise ValidationError("A road segment with these coordinates already exists.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def current_speed_classification(self):
         last_reading = self.speed_readings.order_by('-created_at').first()
@@ -35,6 +61,7 @@ class RoadSegment(models.Model):
     
     def __str__(self):
         return f"RoadSegment-> id:{self.id} length:{self.road_length}"
+
 
 class SpeedReading(models.Model):
     """
