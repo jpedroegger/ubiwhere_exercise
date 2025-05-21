@@ -81,7 +81,7 @@ class Command(BaseCommand):
         if not road_segment:
             road_segment = RoadSegment.objects.create(
                 coordinate=line,
-                road_length=Decimal(str(row['Length']))
+                road_length=float(row['Length'])
             )
 
         return road_segment
