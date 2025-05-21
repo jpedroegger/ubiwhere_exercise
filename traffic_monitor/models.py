@@ -28,7 +28,7 @@ class RoadSegment(models.Model):
     Model representing a road segment.
     """
     coordinate = models.LineStringField()
-    road_length = models.DecimalField(max_digits=10, decimal_places=2)
+    road_length = models.DecimalField(max_digits=13, decimal_places=9)
 
     @classmethod
     def has_duplicate_linestring(cls, linestring):
