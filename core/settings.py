@@ -41,8 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.gis',
 
     'traffic_monitor',
+
     'rest_framework',
     'rest_framework_gis',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -108,6 +110,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Traffic Monitor API',
+    'DESCRIPTION': 'Traffic Monitor API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
