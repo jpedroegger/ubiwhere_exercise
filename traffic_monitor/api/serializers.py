@@ -2,7 +2,6 @@ from traffic_monitor.models import RoadSegment, SpeedReading
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework_gis.fields import GeometryField
-from django.contrib.gis.geos import LineString
 
 
 class RoadSegmentSerializer(GeoFeatureModelSerializer):

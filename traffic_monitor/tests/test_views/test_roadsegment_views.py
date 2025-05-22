@@ -79,7 +79,7 @@ def test_create_road_segment(api_client, super_user):
 
 
 @pytest.mark.django_db
-def test_create_road_segment_without_admin_credentials(api_client, user, road_segment_payload):
+def test_create_road_segment_without_credentials(api_client, user, road_segment_payload):
 
     api_client.force_authenticate(user=user)
 
@@ -90,9 +90,10 @@ def test_create_road_segment_without_admin_credentials(api_client, user, road_se
     )
 
     assert response_create.status_code == 403
+    assert response_create.data['detail'] == 'You do not have permission to perform this action.'
 
     response_read = api_client.get(
-        '/api/road_segments/?classification=HIGH',
+        '/api/road_segments/',
         format='json'
     )
     assert response_read.data['count'] == 0
@@ -175,8 +176,10 @@ def test_incomplete_update_road_segment(api_client, super_user, sample_road_segm
 
 
 @pytest.mark.django_db
-def test_update_road_segment_without_credenticals(api_client, sample_road_segment, road_segment_update_payload):
+def test_update_road_segment_without_credenticals(api_client, user, sample_road_segment, road_segment_update_payload):
     
+    api_client.force_authenticate(user=user)
+
     response_update = api_client.put(
         f'/api/road_segments/{sample_road_segment.id}/',
         data=road_segment_update_payload,
@@ -184,6 +187,8 @@ def test_update_road_segment_without_credenticals(api_client, sample_road_segmen
     )
 
     assert response_update.status_code == 403
+    assert response_update.data['detail'] == 'You do not have permission to perform this action.'
+
 
 ##### PATCH
 @pytest.mark.django_db
@@ -215,8 +220,10 @@ def test_partial_update_road_segment(api_client, super_user, sample_road_segment
 
 
 @pytest.mark.django_db
-def test_partial_update_road_segment_without_credenticals(api_client, sample_road_segment, road_segment_update_payload):
+def test_partial_update_road_segment_without_credentials(api_client, user, sample_road_segment, road_segment_update_payload):
     
+    api_client.force_authenticate(user=user)
+
     response_update = api_client.patch(
         f'/api/road_segments/{sample_road_segment.id}/',
         data=road_segment_update_payload,
@@ -224,6 +231,8 @@ def test_partial_update_road_segment_without_credenticals(api_client, sample_roa
     )
 
     assert response_update.status_code == 403
+    assert response_update.data['detail'] == 'You do not have permission to perform this action.'
+
 
 ### DELETE
 @pytest.mark.django_db
@@ -249,12 +258,16 @@ def test_delete_road_segment(api_client, super_user, sample_road_segment):
     assert response_after_read.status_code == 404
 
 @pytest.mark.django_db
-def test_delete_road_segment_without_credentials(api_client, sample_road_segment):
+def test_delete_road_segment_without_credentials(api_client, user, sample_road_segment):
     
+    api_client.force_authenticate(user=user)
+
     response_delete = api_client.delete(
         f'/api/road_segments/{sample_road_segment.id}/')
     
     assert response_delete.status_code == 403
+    assert response_delete.data['detail'] == 'You do not have permission to perform this action.'
+
 
 
 
