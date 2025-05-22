@@ -1,5 +1,5 @@
 import pytest 
-from traffic_monitor.models import TrafficClassification, RoadSegment, SpeedReading
+from traffic_monitor.models import RoadSegment, SpeedReading
 from django.contrib.gis.geos import LineString
 
 
@@ -100,7 +100,7 @@ def test_create_road_segment_without_admin_credentials(api_client, user, road_se
 ####################################DetailView########################################
 
 
-
+### GET
 @pytest.mark.django_db
 def test_get_road_segment_detail(api_client, sample_road_segment, line_string):
  
@@ -124,69 +124,140 @@ def test_get_road_segment_detail(api_client, sample_road_segment, line_string):
     )
     assert invalid_response_read.status_code == 404
     
-
+##### PUT
 @pytest.mark.django_db
-def test_update_road_segment(api_client, super_user, sample_road_segment):
+def test_update_road_segment(api_client, super_user, sample_road_segment,
+                             road_segment_update_payload):
+    
     api_client.force_authenticate(user=super_user)
 
     response_update = api_client.put(
         f'/api/road_segments/{sample_road_segment.id}/',
-        data={
-            "id": 1,
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                "coordinates": [
-                    [
-                        103.9460064,
-                        30.75066046
-                    ],
-                    [
-                        103.9564943,
-                        30.7450801
-                    ]
-                ]
-            },
-            "properties": {
-                "speed_records": 2,
-                "traffic_classification": "MEDIUM",
-                "road_length": 1179.207157
-            }
-        }, 
+        data=road_segment_update_payload, 
         format='json'
     )
 
-    assert response_update.status_code == 200  # Should be 200 for successful PUT
+    assert response_update.status_code == 200
     
-    # Verify the update
     response_read = api_client.get(
         f'/api/road_segments/{sample_road_segment.id}/',
         format='json'
     )
     
     assert response_read.status_code == 200
+    assert response_read.data['geometry']['coordinates'] == list([[999.999999, 888.9999999], [889.888888, 99.88888888]])
+    assert response_read.data['properties']['road_length'] == 99.99
+
+
+@pytest.mark.django_db
+def test_incomplete_update_road_segment(api_client, super_user, sample_road_segment):
+    
+    api_client.force_authenticate(user=super_user)
+
+    response_update = api_client.put(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        data={
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [999.999999, 888.9999999],
+                [889.888888, 99.88888888]
+            ]
+        },
+        "properties": {
+        }
+        }, 
+        format='json'
+    )
+
+    assert response_update.status_code == 400
+
+
+@pytest.mark.django_db
+def test_update_road_segment_without_credenticals(api_client, sample_road_segment, road_segment_update_payload):
+    
+    response_update = api_client.put(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        data=road_segment_update_payload,
+        format='json'
+    )
+
+    assert response_update.status_code == 403
+
+##### PATCH
+@pytest.mark.django_db
+def test_partial_update_road_segment(api_client, super_user, sample_road_segment):
+    
+    api_client.force_authenticate(user=super_user)
+
+    response_update = api_client.patch(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        data={
+            "type": "Feature",
+            "properties": {
+                "road_length": 10.0
+            }
+        }, 
+        format='json'
+    )
+
+    assert response_update.status_code == 200
+    
+    response_read = api_client.get(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        format='json'
+    )
+    
+    assert response_read.status_code == 200
+    assert response_read.data['geometry']['coordinates'] == list([[104.1119814, 30.653166], [104.110012, 30.64971387]])
     assert response_read.data['properties']['road_length'] == 10.0
-    # assert response_create.status_code == 301
-    # assert response_create.data['geometry']['coordinates'] == list([[104.1119814, 30.653166],[104.110012, 30.64971387]])
-    # assert response_read.data['properties']['road_length'] == 397.8707718
-    # print(f"\nData: {response_create.data['properties']['road_length']}\n")
 
 
-# @pytest.mark.django_db
-# def test_create_road_segment_without_admin_credentials(api_client, user, road_segment_payload):
+@pytest.mark.django_db
+def test_partial_update_road_segment_without_credenticals(api_client, sample_road_segment, road_segment_update_payload):
+    
+    response_update = api_client.patch(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        data=road_segment_update_payload,
+        format='json'
+    )
 
-#     api_client.force_authenticate(user=user)
+    assert response_update.status_code == 403
 
-#     response_create = api_client.post(
-#         '/api/road_segments/',
-#         data=road_segment_payload,
-#         format='json'
-#     )
+### DELETE
+@pytest.mark.django_db
+def test_delete_road_segment(api_client, super_user, sample_road_segment):
 
-#     assert response_create.status_code == 403
+    api_client.force_authenticate(user=super_user)
 
-#     response_read = api_client.get(
-#         '/api/road_segments/?classification=HIGH',
-#         format='json'
-#     )
-#     assert response_read.data['count'] == 0
+    response_before_delete = api_client.get(
+        f'/api/road_segments/{sample_road_segment.id}/',
+        format='json'
+    )
+
+    assert response_before_delete.status_code == 200
+    
+    response_delete = api_client.delete(
+        f'/api/road_segments/{sample_road_segment.id}/')
+    
+    assert response_delete.status_code == 204
+
+    response_after_read = api_client.get(
+        f'/api/road_segments/{sample_road_segment.id}/')
+    
+    assert response_after_read.status_code == 404
+
+@pytest.mark.django_db
+def test_delete_road_segment_without_credentials(api_client, sample_road_segment):
+    
+    response_delete = api_client.delete(
+        f'/api/road_segments/{sample_road_segment.id}/')
+    
+    assert response_delete.status_code == 403
+
+
+
+
+
+

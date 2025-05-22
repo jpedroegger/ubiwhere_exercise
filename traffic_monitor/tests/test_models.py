@@ -5,6 +5,14 @@ from django.core.exceptions import ValidationError
 
 
 @pytest.mark.django_db
+def test_duplicate_detection_excludes_given_id(line_string, sample_road_segment):
+
+    assert RoadSegment.objects.duplicate_exists(
+        line_string, 
+        exclude_id=sample_road_segment.id) is False
+
+
+@pytest.mark.django_db
 def test_traffic_classification_creation():
     classification = TrafficClassification.objects.create(
         name='MEDIUM',
@@ -31,17 +39,20 @@ def test_road_segment_creation(line_string):
 
 @pytest.mark.django_db
 def test_road_segment_duplicate_detection(line_string, reversed_line_string):
-    road_segment = RoadSegment.objects.create(
+    RoadSegment.objects.create(
         coordinate=line_string,
         road_length=1179.207157
     )
 
-    assert road_segment.has_duplicate_linestring(line_string) is True
-    assert road_segment.has_duplicate_linestring(reversed_line_string) is True
+    assert RoadSegment.objects.duplicate_exists(line_string) is True
+    assert RoadSegment.objects.duplicate_exists(reversed_line_string) is True
     assert RoadSegment.objects.count() == 1
 
-    new_line_string = LineString((1, 2), (1, 2))
-    assert road_segment.has_duplicate_linestring(new_line_string) is False
+    new_line_string = LineString(
+        (999.999999, 888.9999999),
+        (889.888888, 99.88888888)
+    )
+    assert RoadSegment.objects.duplicate_exists(new_line_string) is False
 
 
 @pytest.mark.django_db

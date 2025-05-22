@@ -2,8 +2,6 @@ import pytest
 from traffic_monitor.models import TrafficClassification, RoadSegment, SpeedReading
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import LineString
-from django.utils import timezone
-from datetime import timedelta
 from rest_framework.test import APIClient
 
 
@@ -60,7 +58,6 @@ def traffic_classifications():
 
 @pytest.fixture
 def sample_road_segment(line_string):
-    """Returns a basic RoadSegment instance"""
     return RoadSegment.objects.create(
         coordinate=line_string,
         road_length=100.0
@@ -69,24 +66,27 @@ def sample_road_segment(line_string):
 
 @pytest.fixture
 def sample_speed_readings(sample_road_segment):
-    now = timezone.now()
     return [
         SpeedReading.objects.create(
             road_segment=sample_road_segment,
             speed=25.0,
-            created_at=now - timedelta(days=2)
         ),
         SpeedReading.objects.create(
             road_segment=sample_road_segment,
             speed=45.0,
-            created_at=now - timedelta(days=1)
         ),
         SpeedReading.objects.create(
             road_segment=sample_road_segment,
             speed=75.0,
-            created_at=now
         )
     ]
+
+@pytest.fixture
+def sample_speed_reading(sample_road_segment):
+    return SpeedReading.objects.create(
+            road_segment=sample_road_segment,
+            speed=25.0,
+        )
 
 @pytest.fixture
 def road_segment_payload():
@@ -101,5 +101,21 @@ def road_segment_payload():
         },
         "properties": {
             "road_length": 397.8707718
+        }
+    }
+
+@pytest.fixture
+def road_segment_update_payload():
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [999.999999, 888.9999999],
+                [889.888888, 99.88888888]
+            ]
+        },
+        "properties": {
+            "road_length": 99.99
         }
     }
