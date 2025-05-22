@@ -123,7 +123,7 @@ class RoadSegmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
     
     @extend_schema(
-    request=RoadSegmentSerializer,  # Explicit request body documentation
+    request=RoadSegmentSerializer,
     responses={
         200: OpenApiResponse(
             response=RoadSegmentSerializer,
@@ -251,7 +251,7 @@ class SpeedReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().put(request, *args, **kwargs)
     
     @extend_schema(
-    request=SpeedReadingSerializer,  # Explicit request body documentation
+    request=SpeedReadingSerializer,
     responses={
         200: OpenApiResponse(
             response=SpeedReadingSerializer,

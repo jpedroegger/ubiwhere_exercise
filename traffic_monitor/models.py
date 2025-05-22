@@ -4,6 +4,21 @@ from django.core.exceptions import ValidationError
 from django.contrib.gis.geos import LineString
 
 
+class RoadSegmentManager(models.Manager):
+    def duplicate_exists(self, linestring, exclude_id=None):
+        reversed_ls = LineString(list(linestring.coords)[::-1])
+
+        queryset = self.get_queryset().filter(
+            models.Q(coordinate__exact=linestring) |
+            models.Q(coordinate__exact=reversed_ls)
+        )
+
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+
+        return queryset.exists()
+
+
 class TrafficClassification(models.Model):
     
     CLASSIFICATION_CHOICES = [
@@ -30,23 +45,13 @@ class RoadSegment(models.Model):
     coordinate = models.LineStringField()
     road_length = models.FloatField()
 
-    @classmethod
-    def has_duplicate_linestring(cls, linestring):
-        """
-        Check if a linestring already exists in the database.
-        """
-        new_coordinate = list(linestring.coords)
-
-        return cls.objects.filter(
-            models.Q(coordinate__exact=linestring) |
-            models.Q(coordinate__exact=LineString(new_coordinate[::-1]))
-        ).exists()
+    objects = RoadSegmentManager()
     
     def clean(self):
         """
         Method to call custom validation before saving.
         """
-        if self.coordinate and self.has_duplicate_linestring(self.coordinate):
+        if self.coordinate and RoadSegment.objects.duplicate_exists(self.coordinate, exclude_id=self.id):
             raise ValidationError("A road segment with these coordinates already exists.")
 
     def save(self, *args, **kwargs):

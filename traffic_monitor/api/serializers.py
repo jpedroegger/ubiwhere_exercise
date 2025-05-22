@@ -16,17 +16,14 @@ class RoadSegmentSerializer(GeoFeatureModelSerializer):
         geo_field = 'coordinate'
 
     def validate_coordinate(self, value):
-        if isinstance(value, dict) and value.get('type') == 'LineString':
-            linestring = LineString(value['coordinates'])
-        else:
-            linestring = value
-        
-        if RoadSegment.has_duplicate_linestring(linestring):
+        instance_id = self.instance.id if self.instance else None
+
+        if RoadSegment.objects.duplicate_exists(value, exclude_id=instance_id):
             raise serializers.ValidationError(
                 "A road segment with these coordinates already exists."
             )
         
-        return linestring
+        return value
 
     def get_speed_records(self, obj):
         return obj.speed_readings.count()
