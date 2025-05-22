@@ -113,32 +113,28 @@ def test_current_speed_classification_returns_last_reading(sample_road_segment, 
     assert sample_road_segment.current_speed_classification().name == 'LOW'
 
 @pytest.mark.django_db
-def test_speed_reading_classification_property(traffic_classifications):
-    segment = RoadSegment.objects.create(
-        coordinate=LineString((0, 0), (1, 1)),
-        road_length=100.0
-    )
+def test_speed_reading_classification_property(sample_road_segment, traffic_classifications):
 
     low_reading = SpeedReading.objects.create(
-        road_segment=segment,
+        road_segment=sample_road_segment,
         speed=11.0 
     )
     assert low_reading.classification.name == 'LOW'
     
     medium_reading = SpeedReading.objects.create(
-        road_segment=segment,
+        road_segment=sample_road_segment,
         speed=45.0 
     )
     assert medium_reading.classification.name == 'MEDIUM'
     
     high_reading = SpeedReading.objects.create(
-        road_segment=segment,
+        road_segment=sample_road_segment,
         speed=75.0 
     )
     assert high_reading.classification.name == 'HIGH'
 
     boundary_reading = SpeedReading.objects.create(
-        road_segment=segment,
+        road_segment=sample_road_segment,
         speed=51.0 
     )
     assert boundary_reading.classification.name == 'HIGH' 

@@ -4,7 +4,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import LineString
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework.test import APIClient
 
+
+@pytest.fixture
+def api_client():
+    yield APIClient()
 
 User = get_user_model()
 
@@ -14,6 +19,14 @@ def user():
         username="testuser",
         password="testpassword",
         email="testuser@test.com"
+    )
+
+@pytest.fixture
+def super_user():
+    return User.objects.create_superuser(
+        username="test_admin",
+        password="test_admin",
+        email="test_admin@admin.com"
     )
 
 @pytest.fixture
@@ -74,3 +87,19 @@ def sample_speed_readings(sample_road_segment):
             created_at=now
         )
     ]
+
+@pytest.fixture
+def road_segment_payload():
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [104.1119814, 30.653166],
+                [104.110012, 30.64971387]
+            ]
+        },
+        "properties": {
+            "road_length": 397.8707718
+        }
+    }
