@@ -4,7 +4,7 @@ from traffic_monitor.api.views import (
     RoadSegmentDetailView, 
     SpeedReadingListView, 
     SpeedReadingDetailView,
-    TrafficRecordListView
+    TrafficRecordListView,
 )
 from drf_spectacular.views import SpectacularSwaggerView
 
@@ -14,7 +14,7 @@ urlpatterns = [
     path('speed_readings/', SpeedReadingListView.as_view(), name='speed-reading-list'),
     path('speed_readings/<int:pk>/', SpeedReadingDetailView.as_view(), name='speed-reading-detail'),
 
-    path('traffic_records/', TrafficRecordListView.as_view(), name='traffic_records'),
+    path('traffic_records/', TrafficRecordListView.as_view(), name='traffic-records'),
 
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

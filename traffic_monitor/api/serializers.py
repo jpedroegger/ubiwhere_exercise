@@ -60,4 +60,5 @@ class TrafficRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrafficRecord
         fields = '__all__'
+        depth = 1
        

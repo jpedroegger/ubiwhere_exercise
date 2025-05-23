@@ -9,6 +9,7 @@ class SpeedReadingInline(admin.TabularInline):
 class RoadSegmentAdmin(admin.ModelAdmin):
     fields = ('coordinate', 'road_length')
     inlines = [SpeedReadingInline]
+    list_display = ["id", "__str__" ]
     
 class SpeedReadingAdmin(admin.ModelAdmin):
     pass
@@ -17,7 +18,7 @@ class TrafficClassificationAdmin(admin.ModelAdmin):
     pass
 
 class CarAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["id"]
 
 class SensorAdmin(admin.ModelAdmin):
     pass
