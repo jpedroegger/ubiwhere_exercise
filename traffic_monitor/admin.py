@@ -1,5 +1,5 @@
 from django.contrib import admin
-from traffic_monitor.models import RoadSegment, SpeedReading, TrafficClassification
+from traffic_monitor.models import RoadSegment, SpeedReading, TrafficClassification, Car, Sensor, TrafficRecord
 
 
 class SpeedReadingInline(admin.TabularInline):
@@ -16,7 +16,19 @@ class SpeedReadingAdmin(admin.ModelAdmin):
 class TrafficClassificationAdmin(admin.ModelAdmin):
     pass
 
+class CarAdmin(admin.ModelAdmin):
+    pass
+
+class SensorAdmin(admin.ModelAdmin):
+    pass
+
+class TrafficRecordAdmin(admin.ModelAdmin):
+    pass
+
 
 admin.site.register(RoadSegment, RoadSegmentAdmin)
 admin.site.register(SpeedReading, SpeedReadingAdmin)
 admin.site.register(TrafficClassification, TrafficClassificationAdmin)
+admin.site.register(Car, CarAdmin)
+admin.site.register(Sensor, SensorAdmin)
+admin.site.register(TrafficRecord, TrafficRecordAdmin)

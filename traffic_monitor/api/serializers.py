@@ -1,4 +1,10 @@
-from traffic_monitor.models import RoadSegment, SpeedReading
+from traffic_monitor.models import (
+    RoadSegment, 
+    SpeedReading,
+    Car,
+    Sensor,
+    TrafficRecord
+)
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework_gis.fields import GeometryField
@@ -36,3 +42,22 @@ class SpeedReadingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpeedReading
         fields = '__all__'
+
+
+class CarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = '__all__'
+
+
+class SensorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sensor
+        fields = '__all__'
+
+
+class TrafficRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrafficRecord
+        fields = '__all__'
+       

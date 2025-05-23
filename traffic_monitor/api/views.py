@@ -1,7 +1,16 @@
+import datetime
 from django.db.models import OuterRef, Subquery
 from rest_framework import generics
-from traffic_monitor.models import RoadSegment, SpeedReading, TrafficClassification
-from traffic_monitor.api.serializers import RoadSegmentSerializer, SpeedReadingSerializer
+from traffic_monitor.models import (
+    RoadSegment, 
+    SpeedReading, 
+    TrafficClassification,
+    Car,
+    Sensor,
+    TrafficRecord,
+)
+from rest_framework.response import Response
+from traffic_monitor.api.serializers import RoadSegmentSerializer, SpeedReadingSerializer, TrafficRecordSerializer
 from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly
 from drf_spectacular.utils import (
     extend_schema,
@@ -9,7 +18,7 @@ from drf_spectacular.utils import (
     OpenApiTypes,
     OpenApiResponse,
 )
-
+from django.db.models import Q
 
 
 class RoadSegmentListView(generics.ListCreateAPIView):
@@ -280,3 +289,90 @@ class SpeedReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
+    
+import logging
+
+logger = logging.getLogger(__name__)
+
+class TrafficRecordListView(generics.ListCreateAPIView):
+    
+    serializer_class = TrafficRecordSerializer
+
+    def get_queryset(self):
+        license_plate = self.request.query_params.get('license_plate', None)
+
+        if not license_plate:
+            return TrafficRecord.objects.all()
+        date_from = datetime.datetime.now() - datetime.timedelta(days=1)
+        logger.debug(f"RoadSegments: {date_from}")
+        try:
+            car = TrafficRecord.objects.filter(
+                Q(car__license_plate=license_plate) &
+                Q(timestamp__gte=date_from)    
+            )
+            return car
+        except Car.DoesNotExist:
+            return Car.ojects.none()
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"error": "Expected a list of objects"}, status=400)
+
+        # Step 1: Collect unique fields
+        license_plates = {item['car__license_plate'] for item in data}
+        sensor_uuids = {item['sensor__uuid'] for item in data}
+        segments = {item['road_segment'] for item in data}
+
+        logger.debug(f"RoadSegments: {data}")
+        # Step 2: Fetch existing related objects
+        cars = {c.license_plate: c for c in Car.objects.filter(license_plate__in=license_plates)}
+        sensors = {str(s.uuid): s for s in Sensor.objects.filter(uuid__in=sensor_uuids)}
+        road_segments = {r.id: r for r in RoadSegment.objects.filter(id__in=segments)}
+
+        # logger.debug(f"Cars Filter: {cars}")
+        # logger.debug(f"Sensors Filter: {sensors}")
+
+        # Step 3: Create missing cars
+        missing_plates = license_plates - cars.keys()
+        for plate in missing_plates:
+            new_car = Car.objects.create(license_plate=plate)
+            cars[plate] = new_car
+
+
+        # logger.debug(f"Cars List: {cars}")
+
+        # Step 4: Build valid TrafficRecord instances
+        traffic_records = []
+        errors = []
+
+        for idx, item in enumerate(data):
+            car = cars.get(item['car__license_plate'])
+            sensor = sensors.get(item['sensor__uuid'])
+            segment = road_segments.get(item['road_segment'])
+
+            # logger.debug(f"Get Sensor in List: {sensor}")
+            # logger.debug(f"Get Car in List: {car}")
+            # logger.debug(f"ITEM: {item['sensor__uuid']}")
+
+            
+            if not sensor:
+                errors.append({
+                    "index": idx,
+                    "sensor__uuid": item.get("sensor__uuid"),
+                })
+                continue
+
+            traffic_records.append(TrafficRecord(
+                road_segment=segment,
+                car=car,
+                timestamp=item['timestamp'] if 'timestamp' in item else datetime.datetime.now(),
+                sensor=sensor,
+            ))
+
+        if errors:
+            return Response({"errors": errors}, status=400)
+
+        created = TrafficRecord.objects.bulk_create(traffic_records)
+
+        return Response(self.get_serializer(created, many=True).data, status=201)
