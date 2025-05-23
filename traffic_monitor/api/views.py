@@ -19,6 +19,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 from django.db.models import Q
+from traffic_monitor.api_key_authentication import HasAPIKeyOrReadOnly
 
 
 class RoadSegmentListView(generics.ListCreateAPIView):
@@ -289,14 +290,12 @@ class SpeedReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
-    
-import logging
 
-logger = logging.getLogger(__name__)
 
 class TrafficRecordListView(generics.ListCreateAPIView):
     
     serializer_class = TrafficRecordSerializer
+    permission_classes = [HasAPIKeyOrReadOnly]
 
     def get_queryset(self):
         license_plate = self.request.query_params.get('license_plate', None)
@@ -304,7 +303,6 @@ class TrafficRecordListView(generics.ListCreateAPIView):
         if not license_plate:
             return TrafficRecord.objects.all()
         date_from = datetime.datetime.now() - datetime.timedelta(days=1)
-        logger.debug(f"RoadSegments: {date_from}")
         try:
             car = TrafficRecord.objects.filter(
                 Q(car__license_plate=license_plate) &
@@ -319,30 +317,19 @@ class TrafficRecordListView(generics.ListCreateAPIView):
         if not isinstance(data, list):
             return Response({"error": "Expected a list of objects"}, status=400)
 
-        # Step 1: Collect unique fields
         license_plates = {item['car__license_plate'] for item in data}
         sensor_uuids = {item['sensor__uuid'] for item in data}
         segments = {item['road_segment'] for item in data}
 
-        logger.debug(f"RoadSegments: {data}")
-        # Step 2: Fetch existing related objects
         cars = {c.license_plate: c for c in Car.objects.filter(license_plate__in=license_plates)}
         sensors = {str(s.uuid): s for s in Sensor.objects.filter(uuid__in=sensor_uuids)}
         road_segments = {r.id: r for r in RoadSegment.objects.filter(id__in=segments)}
 
-        # logger.debug(f"Cars Filter: {cars}")
-        # logger.debug(f"Sensors Filter: {sensors}")
-
-        # Step 3: Create missing cars
         missing_plates = license_plates - cars.keys()
         for plate in missing_plates:
             new_car = Car.objects.create(license_plate=plate)
             cars[plate] = new_car
 
-
-        # logger.debug(f"Cars List: {cars}")
-
-        # Step 4: Build valid TrafficRecord instances
         traffic_records = []
         errors = []
 
@@ -350,11 +337,6 @@ class TrafficRecordListView(generics.ListCreateAPIView):
             car = cars.get(item['car__license_plate'])
             sensor = sensors.get(item['sensor__uuid'])
             segment = road_segments.get(item['road_segment'])
-
-            # logger.debug(f"Get Sensor in List: {sensor}")
-            # logger.debug(f"Get Car in List: {car}")
-            # logger.debug(f"ITEM: {item['sensor__uuid']}")
-
             
             if not sensor:
                 errors.append({
