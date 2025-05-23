@@ -1,5 +1,6 @@
 import pytest
-from traffic_monitor.models import TrafficClassification, RoadSegment, SpeedReading
+from traffic_monitor.models import (
+    TrafficClassification, RoadSegment, SpeedReading, TrafficRecord, Sensor, Car)
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import LineString
 from rest_framework.test import APIClient
@@ -119,3 +120,42 @@ def road_segment_update_payload():
             "road_length": 99.99
         }
     }
+
+@pytest.fixture
+def sample_sensor():
+    return Sensor.objects.create(
+        id=99,
+        name="Test Sensor",
+        uuid="2fad650b-de67-48c5-bb0c-0d6eb02e8499",
+    )
+
+@pytest.fixture
+def sample_car():
+    return Car.objects.create(
+        license_plate="AA00AA",
+    )
+
+@pytest.fixture
+def sample_traffic_record(sample_road_segment, sample_sensor, sample_car):
+    return TrafficRecord.objects.create(
+        road_segment=sample_road_segment,
+        sensor=sample_sensor,
+        car=sample_car,
+    )
+
+@pytest.fixture
+def traffic_record_list_payload(sample_road_segment, sample_sensor):
+    return [
+        {
+            "road_segment" : sample_road_segment.id,
+            "car__license_plate":"AA00AA",
+            "timestamp": "2023-05-29T17:05:21.713Z",
+            "sensor__uuid": sample_sensor.uuid
+        },
+        {
+            "road_segment" : sample_road_segment.id,
+            "car__license_plate":"BB11BB",
+            "timestamp": "2025-05-22T17:05:21.713Z",
+            "sensor__uuid":  sample_sensor.uuid
+        }
+    ]
