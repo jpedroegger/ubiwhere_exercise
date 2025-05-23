@@ -11,7 +11,7 @@ from traffic_monitor.models import (
 )
 from rest_framework.response import Response
 from traffic_monitor.api.serializers import RoadSegmentSerializer, SpeedReadingSerializer, TrafficRecordSerializer
-from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly
+from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly, IsAdminUser 
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter,
@@ -291,6 +291,9 @@ class SpeedReadingDetailView(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TrafficRecordListView(generics.ListCreateAPIView):
     
@@ -302,15 +305,12 @@ class TrafficRecordListView(generics.ListCreateAPIView):
 
         if not license_plate:
             return TrafficRecord.objects.all()
-        date_from = datetime.datetime.now() - datetime.timedelta(days=1)
-        try:
-            car = TrafficRecord.objects.filter(
+        date_range = datetime.datetime.now() - datetime.timedelta(days=1)
+        daily_records = TrafficRecord.objects.filter(
                 Q(car__license_plate=license_plate) &
-                Q(timestamp__gte=date_from)    
+                Q(timestamp__gte=date_range)    
             )
-            return car
-        except Car.DoesNotExist:
-            return Car.ojects.none()
+        return daily_records
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -321,9 +321,17 @@ class TrafficRecordListView(generics.ListCreateAPIView):
         sensor_uuids = {item['sensor__uuid'] for item in data}
         segments = {item['road_segment'] for item in data}
 
+        # logger.debug(f"License Plates: {license_plates}")
+        # logger.debug(f"Sensor Uuids: {sensor_uuids}")
+        # logger.debug(f"Segments: {segments}")
+
         cars = {c.license_plate: c for c in Car.objects.filter(license_plate__in=license_plates)}
         sensors = {str(s.uuid): s for s in Sensor.objects.filter(uuid__in=sensor_uuids)}
         road_segments = {r.id: r for r in RoadSegment.objects.filter(id__in=segments)}
+        
+        # logger.debug(f"cars: {cars}")
+        # logger.debug(f"Sensor: {sensors}")
+        # logger.debug(f"road_segments: {road_segments}")
 
         missing_plates = license_plates - cars.keys()
         for plate in missing_plates:
@@ -345,12 +353,14 @@ class TrafficRecordListView(generics.ListCreateAPIView):
                 })
                 continue
 
-            traffic_records.append(TrafficRecord(
-                road_segment=segment,
-                car=car,
-                timestamp=item['timestamp'] if 'timestamp' in item else datetime.datetime.now(),
-                sensor=sensor,
-            ))
+            traffic_records.append(
+                TrafficRecord(
+                    road_segment=segment,
+                    car=car,
+                    timestamp=item['timestamp'] if 'timestamp' in item else datetime.datetime.now(),
+                    sensor=sensor,
+                )
+            )
 
         if errors:
             return Response({"errors": errors}, status=400)

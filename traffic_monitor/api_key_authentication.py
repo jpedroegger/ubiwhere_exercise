@@ -12,7 +12,7 @@ class HasAPIKeyOrReadOnly(permissions.BasePermission):
     API_KEY = settings.API_KEY
     def has_permission(self, request, view):
 
-        if request.method not in permissions.SAFE_METHODS:
+        if request.method not in permissions.SAFE_METHODS: #POST
             auth_header = request.META.get('HTTP_AUTHORIZATION', '')
             
             if not auth_header.startswith('API-Key '):
@@ -20,4 +20,6 @@ class HasAPIKeyOrReadOnly(permissions.BasePermission):
                 
             provided_key = auth_header.split(' ')[1]
             return provided_key == self.API_KEY
+        if not request.user.is_staff:        
+            return False
         return True
