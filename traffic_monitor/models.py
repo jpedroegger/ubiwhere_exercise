@@ -124,7 +124,7 @@ class TrafficRecord(models.Model):
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name='traffic_records')
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='traffic_records')
     road_segment = models.ForeignKey(RoadSegment, on_delete=models.CASCADE, related_name='traffic_records')
-    timestamp = models.DateTimeField(default=datetime.datetime.now())
+    timestamp = models.DateTimeField()
 
     def __str__(self):
         return f"TrafficRecord-> Sensor:{self.sensor.name} Car:{self.car.license_plate} RoadSegment:{self.road_segment.id} at {self.timestamp}"

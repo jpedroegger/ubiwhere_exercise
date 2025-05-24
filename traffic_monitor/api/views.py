@@ -365,7 +365,7 @@ class TrafficRecordListView(generics.ListCreateAPIView):
                 "car": car.id,
                 "sensor": sensor.id,
                 "road_segment": segment.id,
-                "timestamp": item.get("timestamp", datetime.datetime.now())
+                "timestamp": item.get("timestamp", None)
             })
 
         serializer = self.get_serializer(data=prepared_data, many=True)
