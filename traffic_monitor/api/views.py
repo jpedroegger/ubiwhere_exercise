@@ -1,5 +1,6 @@
 import datetime
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Subquery, Count, Q
+from django.db import IntegrityError
 from rest_framework import generics
 from traffic_monitor.models import (
     RoadSegment, 
@@ -9,8 +10,13 @@ from traffic_monitor.models import (
     Sensor,
     TrafficRecord,
 )
+from django.core.exceptions import ValidationError
 from rest_framework.response import Response
-from traffic_monitor.api.serializers import RoadSegmentSerializer, SpeedReadingSerializer, TrafficRecordSerializer
+from traffic_monitor.api.serializers import (
+    RoadSegmentSerializer, 
+    SpeedReadingSerializer, 
+    TrafficRecordSerializer,
+)
 from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly, IsAdminUser 
 from drf_spectacular.utils import (
     extend_schema,
@@ -18,9 +24,9 @@ from drf_spectacular.utils import (
     OpenApiTypes,
     OpenApiResponse,
 )
-from django.db.models import Q
 from traffic_monitor.api_key_authentication import HasAPIKeyOrReadOnly
 
+from traffic_monitor.views import get_or_create_car_dict, get_valide_uuids
 
 class RoadSegmentListView(generics.ListCreateAPIView):
     """
@@ -60,25 +66,32 @@ class RoadSegmentListView(generics.ListCreateAPIView):
         return super().get(request, *args, **kwargs)
     
     def get_queryset(self):
-        classification_filter = self.request.query_params.get('classification', None)
-        
-        if not classification_filter:
-            return RoadSegment.objects.all()
+        classification_filter = self.request.query_params.get('classification', '').upper()
+        classification = None
+        if classification_filter:
+            try:
+                classification = TrafficClassification.objects.get(name=classification_filter)
+            except TrafficClassification.DoesNotExist:
+                return RoadSegment.objects.none()
 
-        try:
-            classification = TrafficClassification.objects.get(name=classification_filter.upper())
-        except TrafficClassification.DoesNotExist:
-            return RoadSegment.objects.none()
-        latest_readings = SpeedReading.objects.filter(
+        latest_speed_subquery = SpeedReading.objects.filter(
             road_segment=OuterRef('pk')
-        ).order_by('-created_at')
-        
-        return RoadSegment.objects.annotate(
-            latest_speed=Subquery(latest_readings.values('speed')[:1])
-        ).filter(
-            latest_speed__gte=classification.min_speed or 0,
-            latest_speed__lte=classification.max_speed or float('inf')
-        )
+        ).order_by('-created_at').values('speed')[:1]
+
+        queryset = RoadSegment.objects.annotate(
+            latest_speed=Subquery(latest_speed_subquery),
+            speed_reading_count=Count('speed_readings')
+        ).prefetch_related('speed_readings')
+
+        if classification:
+            min_speed = classification.min_speed or 0
+            max_speed = classification.max_speed or float('inf')
+            queryset = queryset.filter(
+                latest_speed__gte=min_speed,
+                latest_speed__lte=max_speed
+            )
+
+        return queryset
 
 
 class RoadSegmentDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -303,68 +316,65 @@ class TrafficRecordListView(generics.ListCreateAPIView):
     def get_queryset(self):
         license_plate = self.request.query_params.get('license_plate', None)
 
-        if not license_plate:
-            return TrafficRecord.objects.all()
-        date_range = datetime.datetime.now() - datetime.timedelta(days=1)
-        daily_records = TrafficRecord.objects.filter(
-                Q(car__license_plate=license_plate) &
-                Q(timestamp__gte=date_range)    
+        traffic_records = TrafficRecord.objects.all().select_related(
+           'car', 'sensor', 'road_segment'
+        )
+
+        if license_plate:
+            date_range = datetime.datetime.now() - datetime.timedelta(days=1)
+            traffic_records = TrafficRecord.objects.filter(
+                    Q(car__license_plate=license_plate) &
+                    Q(timestamp__gte=date_range)    
             )
-        return daily_records
+        return traffic_records
 
     def create(self, request, *args, **kwargs):
         data = request.data
         if not isinstance(data, list):
             return Response({"error": "Expected a list of objects"}, status=400)
+    
+        license_plates = {item.get('car__license_plate') for item in data}
+        sensor_uuids = {item.get('sensor__uuid') for item in data}
+        segments = {item.get('road_segment') for item in data}
 
-        license_plates = {item['car__license_plate'] for item in data}
-        sensor_uuids = {item['sensor__uuid'] for item in data}
-        segments = {item['road_segment'] for item in data}
-
-        # logger.debug(f"License Plates: {license_plates}")
-        # logger.debug(f"Sensor Uuids: {sensor_uuids}")
-        # logger.debug(f"Segments: {segments}")
-
-        cars = {c.license_plate: c for c in Car.objects.filter(license_plate__in=license_plates)}
-        sensors = {str(s.uuid): s for s in Sensor.objects.filter(uuid__in=sensor_uuids)}
         road_segments = {r.id: r for r in RoadSegment.objects.filter(id__in=segments)}
         
-        # logger.debug(f"cars: {cars}")
-        # logger.debug(f"Sensor: {sensors}")
-        # logger.debug(f"road_segments: {road_segments}")
-
-        missing_plates = license_plates - cars.keys()
-        for plate in missing_plates:
-            new_car = Car.objects.create(license_plate=plate)
-            cars[plate] = new_car
-
-        traffic_records = []
+        sensors = get_valide_uuids(sensor_uuids)
+        cars = get_or_create_car_dict(license_plates)
+        
+        prepared_data = []
         errors = []
 
         for idx, item in enumerate(data):
-            car = cars.get(item['car__license_plate'])
-            sensor = sensors.get(item['sensor__uuid'])
-            segment = road_segments.get(item['road_segment'])
+    
+            car = cars.get(item.get('car__license_plate'))
+            sensor = sensors.get(item.get('sensor__uuid'))
+            segment = road_segments.get(item.get('road_segment'))
             
-            if not sensor:
+            if not sensor or not segment or not car:
                 errors.append({
                     "index": idx,
-                    "sensor__uuid": item.get("sensor__uuid"),
+                    "error": "Missing related object",
+                    "car__license_plate": item.get('car__license_plate'),
+                    "sensor__uuid": item.get('sensor__uuid'),
+                    "road_segment": item.get('road_segment')
                 })
                 continue
+            
+            prepared_data.append({
+                "car": car.id,
+                "sensor": sensor.id,
+                "road_segment": segment.id,
+                "timestamp": item.get("timestamp", datetime.datetime.now())
+            })
 
-            traffic_records.append(
-                TrafficRecord(
-                    road_segment=segment,
-                    car=car,
-                    timestamp=item['timestamp'] if 'timestamp' in item else datetime.datetime.now(),
-                    sensor=sensor,
-                )
-            )
-
+        serializer = self.get_serializer(data=prepared_data, many=True)
+        serializer.is_valid(raise_exception=True)
+        response = serializer.data
+        self.perform_create(serializer)
         if errors:
-            return Response({"errors": errors}, status=400)
-
-        created = TrafficRecord.objects.bulk_create(traffic_records)
-
-        return Response(self.get_serializer(created, many=True).data, status=201)
+            response = {
+                'possible_errors': errors,
+                'data': serializer.data
+            }
+        return Response(response, status=201)

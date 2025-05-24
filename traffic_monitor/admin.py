@@ -18,7 +18,7 @@ class TrafficClassificationAdmin(admin.ModelAdmin):
     pass
 
 class CarAdmin(admin.ModelAdmin):
-    list_display = ["id"]
+    list_display = ["id", 'license_plate']
 
 class SensorAdmin(admin.ModelAdmin):
     pass

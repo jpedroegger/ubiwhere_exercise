@@ -56,9 +56,26 @@ class SensorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+class TrafficRecordListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        logger.debug(f"validated_data: {validated_data}")
+
+        records = [TrafficRecord(**item) for item in validated_data]
+        return TrafficRecord.objects.bulk_create(records)
+
+
 class TrafficRecordSerializer(serializers.ModelSerializer):
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all())
+    sensor = serializers.PrimaryKeyRelatedField(queryset=Sensor.objects.all())
+    road_segment = serializers.PrimaryKeyRelatedField(queryset=RoadSegment.objects.all())
+
     class Meta:
         model = TrafficRecord
         fields = '__all__'
         depth = 1
+        list_serializer_class = TrafficRecordListSerializer
        

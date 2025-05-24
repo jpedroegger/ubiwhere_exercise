@@ -101,9 +101,10 @@ class Car(models.Model):
     Model representing a car.
     """
     license_plate = models.CharField(max_length=15, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.license_plate}"
+        return f"{self.license_plate} created at {self.created_at}"
     
 class Sensor(models.Model):
     """
@@ -123,7 +124,7 @@ class TrafficRecord(models.Model):
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name='traffic_records')
     car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='traffic_records')
     road_segment = models.ForeignKey(RoadSegment, on_delete=models.CASCADE, related_name='traffic_records')
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(default=datetime.datetime.now())
 
     def __str__(self):
         return f"TrafficRecord-> Sensor:{self.sensor.name} Car:{self.car.license_plate} RoadSegment:{self.road_segment.id} at {self.timestamp}"
