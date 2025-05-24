@@ -7,7 +7,6 @@ from django.conf import settings
 def load_sensor_data(apps, schema_editor):
     Sensor = apps.get_model('traffic_monitor', 'Sensor')
     
-    # app_dir = os.path.dirname(__file__)
     csv_file_path = os.path.join('sensors.csv')
 
     with open(csv_file_path, newline='') as csvfile:
@@ -25,7 +24,10 @@ def reverse_migration(apps, schema_editor):
     Sensor.objects.all().delete()
 
 class Migration(migrations.Migration):
-
+    """
+    Load CSV sensor file into the database in migrations, 
+    so the sensor will be available after build.
+    """
     dependencies = [
         ('traffic_monitor', '0004_car_sensor_trafficrecord'),
     ]

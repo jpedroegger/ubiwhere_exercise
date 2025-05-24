@@ -48,7 +48,6 @@ def test_road_segment_returns_correct_classification(sample_road_segment, sample
     )
 
     serializer = RoadSegmentSerializer(instance=sample_road_segment)
-    print(f"\nserializer.data: {serializer.data}")
     assert serializer.data['properties']['traffic_classification'] == 'HIGH'
 
     SpeedReading.objects.create(

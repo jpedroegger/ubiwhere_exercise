@@ -163,7 +163,7 @@ def test_create_traffic_records_all_invalid(api_client):
 
     response = api_client.post('/api/traffic_records/', payload, format='json')
 
-    print(f"\nDATA: {response.data}\n")
+    (f"\nDATA: {response.data}\n")
     assert response.status_code == 201
     assert len(response.data["invalid_inputs"]) == 3
     assert len(response.data["data"]) == 0
