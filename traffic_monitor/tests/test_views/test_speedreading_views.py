@@ -147,10 +147,8 @@ def test_incomplete_update_speed_reading(api_client, super_user, sample_speed_re
     assert response_update.status_code == 400
 
 @pytest.mark.django_db
-def test_update_speed_reading_without_credenticals(api_client, user, sample_speed_reading):
+def test_update_speed_reading_without_credenticals(api_client, sample_speed_reading):
     
-    api_client.force_authenticate(user=user)
-
     response_update = api_client.put(
         f'/api/speed_readings/{sample_speed_reading.id}/',
         data={
