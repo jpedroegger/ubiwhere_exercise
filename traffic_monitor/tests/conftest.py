@@ -1,9 +1,12 @@
 import pytest
+import datetime
 from traffic_monitor.models import (
     TrafficClassification, RoadSegment, SpeedReading, TrafficRecord, Sensor, Car)
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import LineString
 from rest_framework.test import APIClient
+from django.utils import timezone
+
 
 
 @pytest.fixture
@@ -141,6 +144,7 @@ def sample_traffic_record(sample_road_segment, sample_sensor, sample_car):
         road_segment=sample_road_segment,
         sensor=sample_sensor,
         car=sample_car,
+        timestamp=timezone.now(),
     )
 
 @pytest.fixture
