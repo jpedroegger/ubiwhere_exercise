@@ -40,7 +40,7 @@ class Command(BaseCommand):
         
         self.import_from_dataframe(df)
 
-    def import_from_dataframe(self, dataframe):
+    def import_from_dataframe(self, dataframe) -> None:
         """
         Handles the import logic.
         """
@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
         self.stdout.write("Import completed.")
 
-    def get_or_create_roadsegment(self, row):
+    def get_or_create_roadsegment(self, row) -> RoadSegment:
         """
         Finds or creates a RoadSegment based on LineString (and its reverse).
         """
@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
         return road_segment
 
-    def build_speed_reading(self, row, road):
+    def build_speed_reading(self, row, road) -> SpeedReading:
         """
         Creates a SpeedReading object to be saved later in chunks.
         """
@@ -96,7 +96,7 @@ class Command(BaseCommand):
             created_at=timezone.now()
         )
 
-    def save_speed_readings(self, readings):
+    def save_speed_readings(self, readings) -> None:
         """
         Bulk saves the speed readings to the database.
         """
