@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.gis.geos import LineString
-import datetime
 
 class RoadSegmentManager(models.Manager):
     def duplicate_exists(self, linestring, exclude_id=None):
