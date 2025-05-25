@@ -86,6 +86,13 @@ docker compose exec django-web python manage.py import_csv --file traffic_speed.
 ├── sensors.csv
 └── traffic_speed.csv
 ```
+
+## Database Diagram
+
+<p align="center">
+  <img src="assets/db_schema.png" alt="Database Schema Diagram" width="320"/>
+</p>
+
 ## Author
 
 Developed by [João Pedro Santiliano](https://github.com/jpedroegger)
