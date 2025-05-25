@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_gis",
     "drf_spectacular",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
