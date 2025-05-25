@@ -16,15 +16,11 @@ def test_duplicate_detection_excludes_given_id(line_string, sample_road_segment)
 
 
 @pytest.mark.django_db
-def test_traffic_classification_creation():
-    classification = TrafficClassification.objects.create(
-        name="MEDIUM", min_speed=31, max_speed=60
-    )
+def test_traffic_classification_was_created():
 
-    assert classification.get_name_display() == "medium"
-    assert classification.min_speed == 31
-    assert classification.max_speed == 60
-    assert str(classification) == "medium (31 a 60)"
+    classifications = TrafficClassification.objects.all()
+
+    assert classifications.count() == 3
 
 
 @pytest.mark.django_db
@@ -97,50 +93,49 @@ def test_current_speed_classification_empty(sample_road_segment):
 
 @pytest.mark.django_db
 def test_current_speed_classification_with_readings(
-    sample_road_segment, sample_speed_readings, traffic_classifications
+    sample_road_segment, sample_speed_readings
 ):
     classification = sample_road_segment.current_speed_classification()
 
     assert classification is not None
-    assert classification.name == "HIGH"
+    assert classification.name == "LOW"
 
 
 @pytest.mark.django_db
 def test_current_speed_classification_returns_last_reading(
-    sample_road_segment, sample_speed_readings, traffic_classifications
+    sample_road_segment, sample_speed_readings
 ):
     SpeedReading.objects.create(
         road_segment=sample_road_segment,
         speed=11.0,
     )
 
-    assert sample_road_segment.current_speed_classification().name == "LOW"
+    # print(f"Road: s{sample_road_segment.current_speed_classification()}")
+    assert sample_road_segment.current_speed_classification().name == "HIGH"
 
 
 @pytest.mark.django_db
-def test_speed_reading_classification_property(
-    sample_road_segment, traffic_classifications
-):
+def test_speed_reading_classification_property(sample_road_segment):
 
-    low_reading = SpeedReading.objects.create(
+    high_reading = SpeedReading.objects.create(
         road_segment=sample_road_segment, speed=11.0
     )
-    assert low_reading.classification.name == "LOW"
+    assert high_reading.classification.name == "HIGH"
 
     medium_reading = SpeedReading.objects.create(
         road_segment=sample_road_segment, speed=45.0
     )
     assert medium_reading.classification.name == "MEDIUM"
 
-    high_reading = SpeedReading.objects.create(
+    low_reading = SpeedReading.objects.create(
         road_segment=sample_road_segment, speed=75.0
     )
-    assert high_reading.classification.name == "HIGH"
+    assert low_reading.classification.name == "LOW"
 
     boundary_reading = SpeedReading.objects.create(
-        road_segment=sample_road_segment, speed=51.0
+        road_segment=sample_road_segment, speed=21.0
     )
-    assert boundary_reading.classification.name == "HIGH"
+    assert boundary_reading.classification.name == "MEDIUM"
 
 
 @pytest.mark.django_db

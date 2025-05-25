@@ -18,7 +18,7 @@ def load_sensor_data(apps, schema_editor):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 Sensor.objects.create(
-                    id=row["id"],
+                    # id=row["id"],
                     name=row["name"],
                     uuid=row["uuid"],
                 )
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
     """
 
     dependencies = [
-        ("traffic_monitor", "0006_alter_trafficrecord_timestamp"),
+        ("traffic_monitor", "0007_autocreate_traffic_classifications"),
     ]
 
     operations = [

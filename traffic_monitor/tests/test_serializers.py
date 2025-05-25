@@ -45,7 +45,7 @@ def test_road_segment_returns_correct_speed_records_count(
 
 @pytest.mark.django_db
 def test_road_segment_returns_correct_classification(
-    sample_road_segment, sample_speed_readings, traffic_classifications
+    sample_road_segment, sample_speed_readings
 ):
     SpeedReading.objects.create(
         road_segment=sample_road_segment,
@@ -53,7 +53,7 @@ def test_road_segment_returns_correct_classification(
     )
 
     serializer = RoadSegmentSerializer(instance=sample_road_segment)
-    assert serializer.data["properties"]["traffic_classification"] == "HIGH"
+    assert serializer.data["properties"]["traffic_classification"] == "LOW"
 
     SpeedReading.objects.create(
         road_segment=sample_road_segment,
@@ -61,7 +61,7 @@ def test_road_segment_returns_correct_classification(
     )
 
     serializer = RoadSegmentSerializer(instance=sample_road_segment)
-    assert serializer.data["properties"]["traffic_classification"] == "LOW"
+    assert serializer.data["properties"]["traffic_classification"] == "HIGH"
 
 
 @pytest.mark.django_db

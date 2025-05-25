@@ -1,6 +1,5 @@
 import pytest
 from traffic_monitor.models import (
-    TrafficClassification,
     RoadSegment,
     SpeedReading,
     TrafficRecord,
@@ -43,15 +42,6 @@ def line_string():
 @pytest.fixture
 def reversed_line_string():
     return LineString((104.110012, 30.64971387), (104.1119814, 30.653166))
-
-
-@pytest.fixture
-def traffic_classifications():
-    return [
-        TrafficClassification.objects.create(name="LOW", min_speed=0, max_speed=20),
-        TrafficClassification.objects.create(name="MEDIUM", min_speed=21, max_speed=50),
-        TrafficClassification.objects.create(name="HIGH", min_speed=51, max_speed=None),
-    ]
 
 
 @pytest.fixture

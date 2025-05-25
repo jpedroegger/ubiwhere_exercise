@@ -19,15 +19,15 @@ def test_get_road_segment_list(api_client, sample_road_segment):
 
 @pytest.mark.django_db
 def test_get_road_segment_list_with_filter(
-    api_client, sample_road_segment, sample_speed_readings, traffic_classifications
+    api_client, sample_road_segment, sample_speed_readings
 ):
 
-    high_classified_road_segment = RoadSegment.objects.create(
+    low_classified_road_segment = RoadSegment.objects.create(
         coordinate=LineString((104.110012, 31.64971387), (104.1119814, 31.653166)),
         road_length=100.0,
     )
     SpeedReading.objects.create(
-        road_segment=high_classified_road_segment,
+        road_segment=low_classified_road_segment,
         speed=100.0,
     )
 
@@ -41,7 +41,7 @@ def test_get_road_segment_list_with_filter(
     )
 
     response_read = api_client.get(
-        "/api/road_segments/?classification=HIGH", format="json"
+        "/api/road_segments/?classification=LOW", format="json"
     )
 
     assert response_read.status_code == 200
