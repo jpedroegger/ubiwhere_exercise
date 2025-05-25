@@ -74,10 +74,6 @@ def test_create_speed_reading_without_admin_credentials(
     assert response_read.data["count"] == 0
 
 
-####################################DetailView########################################
-
-
-### GET
 @pytest.mark.django_db
 def test_get_speed_reading_detail(api_client, sample_road_segment):
 
@@ -97,7 +93,6 @@ def test_get_speed_reading_detail(api_client, sample_road_segment):
     assert invalid_response_read.status_code == 404
 
 
-##### PUT
 @pytest.mark.django_db
 def test_update_speed_reading(
     api_client, super_user, sample_speed_reading, sample_road_segment
@@ -153,7 +148,6 @@ def test_update_speed_reading_without_credenticals(api_client, sample_speed_read
     assert response_update.status_code == 403
 
 
-##### PATCH
 @pytest.mark.django_db
 def test_partial_update_speed_reading(api_client, super_user, sample_speed_reading):
 
@@ -193,7 +187,6 @@ def test_partial_update_speed_reading_without_credenticals(
     assert response_update.status_code == 403
 
 
-### DELETE
 @pytest.mark.django_db
 def test_delete_speed_reading(api_client, super_user, sample_speed_reading):
 

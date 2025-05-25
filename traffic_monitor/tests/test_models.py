@@ -110,7 +110,6 @@ def test_current_speed_classification_returns_last_reading(
         speed=11.0,
     )
 
-    # print(f"Road: s{sample_road_segment.current_speed_classification()}")
     assert sample_road_segment.current_speed_classification().name == "HIGH"
 
 

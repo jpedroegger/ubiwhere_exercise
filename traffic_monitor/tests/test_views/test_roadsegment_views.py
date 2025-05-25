@@ -94,10 +94,6 @@ def test_create_road_segment_without_credentials(
     assert response_read.data["count"] == 0
 
 
-####################################DetailView########################################
-
-
-### GET
 @pytest.mark.django_db
 def test_get_road_segment_detail(api_client, sample_road_segment, line_string):
 
@@ -118,7 +114,6 @@ def test_get_road_segment_detail(api_client, sample_road_segment, line_string):
     assert invalid_response_read.status_code == 404
 
 
-##### PUT
 @pytest.mark.django_db
 def test_update_road_segment(
     api_client, super_user, sample_road_segment, road_segment_update_payload
@@ -186,7 +181,6 @@ def test_update_road_segment_without_credenticals(
     )
 
 
-##### PATCH
 @pytest.mark.django_db
 def test_partial_update_road_segment(api_client, super_user, sample_road_segment):
 
@@ -231,7 +225,6 @@ def test_partial_update_road_segment_without_credentials(
     )
 
 
-### DELETE
 @pytest.mark.django_db
 def test_delete_road_segment(api_client, super_user, sample_road_segment):
 

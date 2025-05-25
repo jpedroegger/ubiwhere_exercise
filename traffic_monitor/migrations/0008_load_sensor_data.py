@@ -18,7 +18,6 @@ def load_sensor_data(apps, schema_editor):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 Sensor.objects.create(
-                    # id=row["id"],
                     name=row["name"],
                     uuid=row["uuid"],
                 )
