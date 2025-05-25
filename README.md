@@ -73,16 +73,19 @@ docker compose exec django-web python manage.py import_csv --file traffic_speed.
 
 ```bash
 .
-├── traffic_monitor/      
-├── manage.py
-├── Dockerfile
-├── docker compose.yml
+├── core/      
+├── traffic_monitor/
 ├── .env.example
+├── docker-compose.py
+├── Dockerfile
+├── entrypoint.sh
+├── manage.py
+├── pytest.ini
+├── README.md
 ├── requirements.txt
-└── traffic_speed.csv      # Sample CSV
+├── sensors.csv
+└── traffic_speed.csv
 ```
----
-
 ## Author
 
 Developed by [João Pedro Santiliano](https://github.com/jpedroegger)
