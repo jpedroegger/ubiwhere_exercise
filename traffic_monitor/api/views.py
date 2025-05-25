@@ -1,10 +1,9 @@
 import datetime
-from django.db.models import OuterRef, Subquery, Count, Q
+from django.db.models import Q
 from rest_framework import generics
 from traffic_monitor.models import (
     RoadSegment,
     SpeedReading,
-    TrafficClassification,
     TrafficRecord,
 )
 from rest_framework.response import Response
@@ -25,6 +24,8 @@ from traffic_monitor.utils.traffic_records_helper import (
     get_or_create_car_dict,
     get_valide_uuids,
 )
+from django_filters.rest_framework import DjangoFilterBackend
+from traffic_monitor.api.filters import RoadSegmentFilter
 
 
 class RoadSegmentListView(generics.ListCreateAPIView):
@@ -48,9 +49,11 @@ class RoadSegmentListView(generics.ListCreateAPIView):
     - LOW
     """
 
-    queryset = RoadSegment.objects.none()
     serializer_class = RoadSegmentSerializer
     permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
+    queryset = RoadSegment.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RoadSegmentFilter
 
     @extend_schema(
         parameters=[
@@ -64,39 +67,6 @@ class RoadSegmentListView(generics.ListCreateAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
-    def get_queryset(self):
-        classification_filter = self.request.query_params.get(
-            "classification", ""
-        ).upper()
-        classification = None
-        if classification_filter:
-            try:
-                classification = TrafficClassification.objects.get(
-                    name=classification_filter
-                )
-            except TrafficClassification.DoesNotExist:
-                return RoadSegment.objects.none()
-
-        latest_speed_subquery = (
-            SpeedReading.objects.filter(road_segment=OuterRef("pk"))
-            .order_by("-created_at")
-            .values("speed")[:1]
-        )
-
-        queryset = RoadSegment.objects.annotate(
-            latest_speed=Subquery(latest_speed_subquery),
-            speed_reading_count=Count("speed_readings"),
-        ).prefetch_related("speed_readings")
-
-        if classification:
-            min_speed = classification.min_speed or 0
-            max_speed = classification.max_speed or float("inf")
-            queryset = queryset.filter(
-                latest_speed__gte=min_speed, latest_speed__lte=max_speed
-            )
-
-        return queryset
 
 
 class RoadSegmentDetailView(generics.RetrieveUpdateDestroyAPIView):
