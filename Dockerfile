@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gdal-bin \
     libgdal-dev \
     libgeos-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /app
