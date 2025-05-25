@@ -45,20 +45,14 @@ This will:
 - Set up the database with spatial data support
 - Start the Django server on port `8000`
 
-Access the app at: [http://localhost:8000](http://localhost:8000)
+Access the app at: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 
 ---
-
-## Running Migrations
-
-```bash
-docker compose exec django-web python manage.py migrate
-```
 
 ## Create a Superuser
 
 ```bash
-docker-compose exec django-web python manage.py createsuperuser
+docker compose exec django-web python manage.py createsuperuser
 ```
 
 ---
@@ -70,7 +64,7 @@ Place your `traffic_speed.csv` file in the project root.
 Run the import command:
 
 ```bash
-docker-compose exec django-web python manage.py import_csv ./traffic_speed.csv
+docker compose exec django-web python manage.py import_csv --file traffic_speed.csv
 ```
 
 ---
@@ -79,16 +73,16 @@ docker-compose exec django-web python manage.py import_csv ./traffic_speed.csv
 
 ```bash
 .
-├── traffic_monitor/       # Django app
+├── traffic_monitor/      
 ├── manage.py
 ├── Dockerfile
-├── docker-compose.yml
+├── docker compose.yml
 ├── .env.example
 ├── requirements.txt
-└── traffic_speed.csv      # Sample CSV (not versioned)
+└── traffic_speed.csv      # Sample CSV
 ```
 ---
 
-## 🧑‍💻 Author
+## Author
 
 Developed by [João Pedro Santiliano](https://github.com/jpedroegger)
