@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 import pandas as pd
-from decimal import Decimal
 from django.utils import timezone
 from django.contrib.gis.geos import LineString
 from traffic_monitor.models import RoadSegment, SpeedReading
@@ -24,20 +23,23 @@ class Command(BaseCommand):
     The command can be called from the command line as follows:
     python3 manage.py import_csv --file path/to/your/file.csv
     """
-    help = 'Import road segments and speed readings from a CSV file.'
+
+    help = "Import road segments and speed readings from a CSV file."
 
     def add_arguments(self, parser):
-        parser.add_argument('--file', type=str, required=True, help='Path to the CSV file')
+        parser.add_argument(
+            "--file", type=str, required=True, help="Path to the CSV file"
+        )
 
     def handle(self, *args, **kwargs):
-        file_path = kwargs['file']
+        file_path = kwargs["file"]
 
         try:
             df = pd.read_csv(file_path)
         except Exception as e:
             self.stderr.write(f"Could not read CSV: {e}")
             return
-        
+
         self.import_from_dataframe(df)
 
     def import_from_dataframe(self, dataframe) -> None:
@@ -60,7 +62,7 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stderr.write(f"Error at row {index}: {e}")
 
-        if buffer: #Save remaining readings
+        if buffer:  # Save remaining readings
             self.save_speed_readings(buffer)
 
         self.stdout.write("Import completed.")
@@ -69,19 +71,20 @@ class Command(BaseCommand):
         """
         Finds or creates a RoadSegment based on LineString (and its reverse).
         """
-        start_coord = (float(row['Long_start']), float(row['Lat_start']))
-        end_coord = (float(row['Long_end']), float(row['Lat_end']))
+        start_coord = (float(row["Long_start"]), float(row["Lat_start"]))
+        end_coord = (float(row["Long_end"]), float(row["Lat_end"]))
         line = LineString([start_coord, end_coord])
         reversed_line = LineString([end_coord, start_coord])
 
         road_segment = RoadSegment.objects.filter(coordinate__equals=line).first()
         if not road_segment:
-            road_segment = RoadSegment.objects.filter(coordinate__equals=reversed_line).first()
-        
+            road_segment = RoadSegment.objects.filter(
+                coordinate__equals=reversed_line
+            ).first()
+
         if not road_segment:
             road_segment = RoadSegment.objects.create(
-                coordinate=line,
-                road_length=float(row['Length'])
+                coordinate=line, road_length=float(row["Length"])
             )
 
         return road_segment
@@ -91,9 +94,7 @@ class Command(BaseCommand):
         Creates a SpeedReading object to be saved later in chunks.
         """
         return SpeedReading(
-            road_segment=road,
-            speed=float(row['Speed']),
-            created_at=timezone.now()
+            road_segment=road, speed=float(row["Speed"]), created_at=timezone.now()
         )
 
     def save_speed_readings(self, readings) -> None:

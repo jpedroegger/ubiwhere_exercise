@@ -9,28 +9,53 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='RoadSegment',
+            name="RoadSegment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('coordinate', django.contrib.gis.db.models.fields.LineStringField(srid=4326)),
-                ('road_length', models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "coordinate",
+                    django.contrib.gis.db.models.fields.LineStringField(srid=4326),
+                ),
+                ("road_length", models.DecimalField(decimal_places=2, max_digits=10)),
             ],
         ),
         migrations.CreateModel(
-            name='SpeedReading',
+            name="SpeedReading",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('speed', models.FloatField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('road_segment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='speed_readings', to='traffic_monitor.roadsegment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("speed", models.FloatField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "road_segment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="speed_readings",
+                        to="traffic_monitor.roadsegment",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

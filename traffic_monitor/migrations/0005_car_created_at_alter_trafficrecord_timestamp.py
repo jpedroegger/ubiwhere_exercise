@@ -8,19 +8,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('traffic_monitor', '0004_car_sensor_trafficrecord'),
+        ("traffic_monitor", "0004_car_sensor_trafficrecord"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='car',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            model_name="car",
+            name="created_at",
+            field=models.DateTimeField(
+                auto_now_add=True, default=django.utils.timezone.now
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='trafficrecord',
-            name='timestamp',
-            field=models.DateTimeField(default=datetime.datetime(2025, 5, 23, 18, 0, 47, 787981)),
+            model_name="trafficrecord",
+            name="timestamp",
+            field=models.DateTimeField(
+                default=datetime.datetime(2025, 5, 23, 18, 0, 47, 787981)
+            ),
         ),
     ]

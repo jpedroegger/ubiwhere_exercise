@@ -1,27 +1,40 @@
 from django.contrib import admin
-from traffic_monitor.models import RoadSegment, SpeedReading, TrafficClassification, Car, Sensor, TrafficRecord
+from traffic_monitor.models import (
+    RoadSegment,
+    SpeedReading,
+    TrafficClassification,
+    Car,
+    Sensor,
+    TrafficRecord,
+)
 
 
 class SpeedReadingInline(admin.TabularInline):
     model = SpeedReading
-    extra = 1 
+    extra = 1
+
 
 class RoadSegmentAdmin(admin.ModelAdmin):
-    fields = ('coordinate', 'road_length')
+    fields = ("coordinate", "road_length")
     inlines = [SpeedReadingInline]
-    list_display = ["id", "__str__" ]
-    
+    list_display = ["id", "__str__"]
+
+
 class SpeedReadingAdmin(admin.ModelAdmin):
     pass
+
 
 class TrafficClassificationAdmin(admin.ModelAdmin):
     pass
 
+
 class CarAdmin(admin.ModelAdmin):
-    list_display = ["id", 'license_plate']
+    list_display = ["id", "license_plate"]
+
 
 class SensorAdmin(admin.ModelAdmin):
     pass
+
 
 class TrafficRecordAdmin(admin.ModelAdmin):
     pass

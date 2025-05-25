@@ -4,16 +4,18 @@ from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.gis.geos import LineString
 
+
 class RoadSegmentManager(models.Manager):
     """
     Custom Manager to filter for coordinates that might match the input even when reversed.
     """
+
     def duplicate_exists(self, linestring: LineString, exclude_id=None) -> bool:
         reversed_ls = LineString(list(linestring.coords)[::-1])
 
         queryset = self.get_queryset().filter(
-            models.Q(coordinate__exact=linestring) |
-            models.Q(coordinate__exact=reversed_ls)
+            models.Q(coordinate__exact=linestring)
+            | models.Q(coordinate__exact=reversed_ls)
         )
 
         if exclude_id:
@@ -26,18 +28,21 @@ class TrafficClassification(models.Model):
     """
     Model representing the Traffic Classification available on Admin Panel.
     """
+
     CLASSIFICATION_CHOICES = [
-        ('LOW', 'low'),
-        ('MEDIUM', 'medium'),
-        ('HIGH', 'high'),
+        ("LOW", "low"),
+        ("MEDIUM", "medium"),
+        ("HIGH", "high"),
     ]
 
-    name = models.CharField(max_length=25, choices=CLASSIFICATION_CHOICES, default='LOW', unique=True)
+    name = models.CharField(
+        max_length=25, choices=CLASSIFICATION_CHOICES, default="LOW", unique=True
+    )
     min_speed = models.FloatField(null=True, blank=True)
     max_speed = models.FloatField(null=True, blank=True)
 
     class Meta:
-        ordering = ['min_speed']
+        ordering = ["min_speed"]
 
     def __str__(self) -> str:
         return f"{self.get_name_display()} ({self.min_speed or 'Null'} a {self.max_speed or 'Null'})"
@@ -47,28 +52,33 @@ class RoadSegment(models.Model):
     """
     Model representing a road segment.
     """
+
     coordinate = models.LineStringField()
     road_length = models.FloatField()
 
     objects = RoadSegmentManager()
-    
+
     def clean(self) -> None:
         """
         Method to call custom validation before saving.
         """
-        if self.coordinate and RoadSegment.objects.duplicate_exists(self.coordinate, exclude_id=self.id):
-            raise ValidationError("A road segment with these coordinates already exists.")
+        if self.coordinate and RoadSegment.objects.duplicate_exists(
+            self.coordinate, exclude_id=self.id
+        ):
+            raise ValidationError(
+                "A road segment with these coordinates already exists."
+            )
 
     def save(self, *args, **kwargs) -> None:
         self.full_clean()
         super().save(*args, **kwargs)
 
     def current_speed_classification(self) -> Any | None:
-        last_reading = self.speed_readings.order_by('-created_at').first()
+        last_reading = self.speed_readings.order_by("-created_at").first()
         if last_reading:
             return last_reading.classification
         return None
-    
+
     def __str__(self) -> str:
         return f"RoadSegment-> id:{self.id} length:{self.road_length}"
 
@@ -77,7 +87,10 @@ class SpeedReading(models.Model):
     """
     Model representing a speed reading for a roada segment.
     """
-    road_segment = models.ForeignKey(RoadSegment, on_delete=models.CASCADE, related_name='speed_readings')
+
+    road_segment = models.ForeignKey(
+        RoadSegment, on_delete=models.CASCADE, related_name="speed_readings"
+    )
     speed = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -87,34 +100,45 @@ class SpeedReading(models.Model):
         Returns the classification based on actual speed rules.
         """
         try:
-            return TrafficClassification.objects.filter(
-                models.Q(min_speed__lte=self.speed) | models.Q(min_speed__isnull=True),
-                models.Q(max_speed__gte=self.speed) | models.Q(max_speed__isnull=True),
-            ).order_by('min_speed').first()
+            return (
+                TrafficClassification.objects.filter(
+                    models.Q(min_speed__lte=self.speed)
+                    | models.Q(min_speed__isnull=True),
+                    models.Q(max_speed__gte=self.speed)
+                    | models.Q(max_speed__isnull=True),
+                )
+                .order_by("min_speed")
+                .first()
+            )
         except TrafficClassification.DoesNotExist:
             return None
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return f"SpeedReading-> RoadSegment:{self.road_segment.id} at speed:{self.speed})"
-    
+        return (
+            f"SpeedReading-> RoadSegment:{self.road_segment.id} at speed:{self.speed})"
+        )
+
 
 class Car(models.Model):
     """
     Model representing a car.
     """
+
     license_plate = models.CharField(max_length=15, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return f"{self.license_plate} created at {self.created_at}"
-    
+
+
 class Sensor(models.Model):
     """
     MOdel representing a sensor.
     """
+
     name = models.CharField(max_length=50)
     uuid = models.UUIDField(unique=True, editable=False)
 
@@ -126,9 +150,16 @@ class TrafficRecord(models.Model):
     """
     MOdel representing a traffic record made by a sensor.
     """
-    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name='traffic_records')
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='traffic_records')
-    road_segment = models.ForeignKey(RoadSegment, on_delete=models.CASCADE, related_name='traffic_records')
+
+    sensor = models.ForeignKey(
+        Sensor, on_delete=models.CASCADE, related_name="traffic_records"
+    )
+    car = models.ForeignKey(
+        Car, on_delete=models.CASCADE, related_name="traffic_records"
+    )
+    road_segment = models.ForeignKey(
+        RoadSegment, on_delete=models.CASCADE, related_name="traffic_records"
+    )
     timestamp = models.DateTimeField()
 
     def __str__(self) -> str:

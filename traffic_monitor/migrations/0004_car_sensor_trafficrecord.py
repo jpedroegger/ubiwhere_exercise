@@ -7,33 +7,78 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('traffic_monitor', '0003_alter_roadsegment_road_length'),
+        ("traffic_monitor", "0003_alter_roadsegment_road_length"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Car',
+            name="Car",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('license_plate', models.CharField(max_length=15, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("license_plate", models.CharField(max_length=15, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Sensor',
+            name="Sensor",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
-                ('uuid', models.UUIDField(editable=False, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
+                ("uuid", models.UUIDField(editable=False, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='TrafficRecord',
+            name="TrafficRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('car', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='traffic_records', to='traffic_monitor.car')),
-                ('road_segment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='traffic_records', to='traffic_monitor.roadsegment')),
-                ('sensor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='traffic_records', to='traffic_monitor.sensor')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "car",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="traffic_records",
+                        to="traffic_monitor.car",
+                    ),
+                ),
+                (
+                    "road_segment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="traffic_records",
+                        to="traffic_monitor.roadsegment",
+                    ),
+                ),
+                (
+                    "sensor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="traffic_records",
+                        to="traffic_monitor.sensor",
+                    ),
+                ),
             ],
         ),
     ]

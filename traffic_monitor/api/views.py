@@ -21,7 +21,10 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 from traffic_monitor.utils.api_key_authentication import HasAPIKeyOrReadOnly
-from traffic_monitor.utils.traffic_records_helper import get_or_create_car_dict, get_valide_uuids
+from traffic_monitor.utils.traffic_records_helper import (
+    get_or_create_car_dict,
+    get_valide_uuids,
+)
 
 
 class RoadSegmentListView(generics.ListCreateAPIView):

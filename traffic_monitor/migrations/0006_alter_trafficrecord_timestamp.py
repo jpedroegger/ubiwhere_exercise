@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('traffic_monitor', '0005_car_created_at_alter_trafficrecord_timestamp'),
+        ("traffic_monitor", "0005_car_created_at_alter_trafficrecord_timestamp"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trafficrecord',
-            name='timestamp',
+            model_name="trafficrecord",
+            name="timestamp",
             field=models.DateTimeField(),
         ),
     ]
