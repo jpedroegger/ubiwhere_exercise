@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('traffic_monitor', '0005_load_sensor_data'),
+        ('traffic_monitor', '0004_car_sensor_trafficrecord'),
     ]
 
     operations = [
